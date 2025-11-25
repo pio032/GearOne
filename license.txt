@@ -1,0 +1,10 @@
+Copyright (c) 2025 GearOne
+Tutti i diritti riservati.
+
+Questo software è proprietà esclusiva di Pietro Ardizzone. Nessuna parte di questo codice
+può essere riprodotta, modificata, distribuita, venduta o altrimenti utilizzata
+in alcuna forma o con qualsiasi mezzo senza il previo consenso scritto di GearOne.
+
+Per richiedere autorizzazioni di utilizzo o per informazioni contattare:
+Pietro Ardizzone - Proprietario del software
+Email: pietro.ardi@icloud.com
