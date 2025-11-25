@@ -9,286 +9,116 @@
   <link rel="apple-touch-icon" href="icon-192.png">
   <title>Gestione Veicoli Aziendali</title>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      overscroll-behavior-y: contain; 
-    }
-
+    * { margin: 0; padding: 0; box-sizing: border-box; overscroll-behavior-y: contain; }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       min-height: 100vh;
       padding: 10px;
-      overflow-x: hidden;
-      /* Smooth scroll per l'auto-scroll */
-      scroll-behavior: auto; 
+      padding-bottom: 50px; /* Spazio extra per scroll */
     }
 
-    .header {
-      text-align: center;
-      color: white;
-      margin-bottom: 20px;
-    }
-
-    .header h1 {
-      font-size: 1.5rem;
-      font-weight: 700;
-      margin-bottom: 5px;
-    }
-
-    .header .subtitle {
-      opacity: 0.9;
-      font-size: 0.9rem;
-    }
-
+    /* HEADER & NAV */
+    .header { text-align: center; color: white; margin-bottom: 20px; }
+    .header h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 5px; }
     .nav-tabs {
-      display: flex;
-      gap: 10px;
-      justify-content: center;
-      margin-bottom: 15px;
-      position: sticky;
-      top: 0;
-      z-index: 90;
-      background: rgba(102, 126, 234, 0.95);
-      padding: 10px 0;
-      backdrop-filter: blur(5px);
+      display: flex; gap: 10px; justify-content: center; margin-bottom: 15px;
+      position: sticky; top: 0; z-index: 90;
+      background: rgba(102, 126, 234, 0.95); padding: 10px 0; backdrop-filter: blur(5px);
     }
-
     .nav-tabs button {
-      padding: 10px 20px;
-      background: rgba(255, 255, 255, 0.2);
-      border: 2px solid rgba(255, 255, 255, 0.3);
-      color: white;
-      border-radius: 10px;
-      cursor: pointer;
-      font-size: 14px;
-      font-weight: 600;
-      transition: all 0.3s ease;
+      padding: 10px 20px; background: rgba(255, 255, 255, 0.2);
+      border: 2px solid rgba(255, 255, 255, 0.3); color: white;
+      border-radius: 10px; font-weight: 600; font-size: 14px;
     }
+    .nav-tabs button.active { background: white; color: #667eea; }
 
-    .nav-tabs button.active {
-      background: white;
-      color: #667eea;
-    }
+    /* LAYOUT */
+    .container { display: flex; flex-direction: column; gap: 15px; max-width: 1400px; margin: 0 auto; }
+    .column { background: white; border-radius: 20px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+    .column h2 { color: #1e293b; margin-bottom: 15px; font-size: 1.3rem; display: flex; align-items: center; gap: 10px; }
 
-    .container {
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
-      max-width: 1400px;
-      margin: 0 auto;
-      padding-bottom: 50px; /* Spazio extra in fondo per facilitare drop */
-    }
-
-    .column {
-      background: white;
-      border-radius: 20px;
-      padding: 20px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-    }
-
-    .column h2 {
-      color: #1e293b;
-      margin-bottom: 15px;
-      font-size: 1.3rem;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    #people-list {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-      gap: 10px;
-    }
-
+    /* PERSONE */
+    #people-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
     .person {
-      padding: 15px;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      border-radius: 12px;
-      cursor: grab;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      user-select: none;
-      -webkit-user-select: none;
-      touch-action: none; 
-      min-height: 50px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      padding: 15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white; border-radius: 12px; font-weight: 600;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      user-select: none; -webkit-user-select: none; touch-action: none;
+      min-height: 50px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); position: relative;
     }
-
-    .person::before {
-      content: "👤";
-      font-size: 1.2rem;
-    }
-
-    /* GHOST ELEMENT */
+    .person::before { content: "👤"; font-size: 1.2rem; }
+    
+    /* GHOST DRAG */
     .drag-ghost {
-      position: fixed;
-      pointer-events: none;
-      z-index: 1000;
-      opacity: 0.9;
-      box-shadow: 0 15px 30px rgba(0,0,0,0.4);
-      transform: scale(1.1) rotate(-2deg);
+      position: fixed; pointer-events: none; z-index: 1000; opacity: 0.9;
+      box-shadow: 0 15px 30px rgba(0,0,0,0.4); transform: scale(1.1) rotate(-3deg);
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      border-radius: 12px;
-      padding: 15px;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      width: 140px;
+      color: white; border-radius: 12px; padding: 15px; font-weight: 600;
+      display: flex; align-items: center; justify-content: center; gap: 8px; width: 140px;
     }
     .drag-ghost::before { content: "👤"; font-size: 1.2rem; }
-
-    .person.dragging-placeholder {
-      opacity: 0.3;
-      background: #e2e8f0;
-      border: 2px dashed #cbd5e1;
-      color: transparent;
-    }
+    .person.dragging-placeholder { opacity: 0.3; background: #e2e8f0; border: 2px dashed #cbd5e1; color: transparent; }
     .person.dragging-placeholder::before { content: ""; }
 
-    .vehicle {
-      background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-      padding: 15px;
-      margin-bottom: 15px;
-      border-radius: 16px;
-      border: 2px solid #e2e8f0;
-    }
+    /* VEICOLI */
+    .vehicle { background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); padding: 15px; margin-bottom: 15px; border-radius: 16px; border: 2px solid #e2e8f0; }
+    .vehicle-header { display: flex; align-items: center; gap: 15px; margin-bottom: 12px; }
+    .vehicle-icon { font-size: 2.5rem; }
+    .vehicle-info h3 { font-size: 1.2rem; margin-bottom: 3px; color: #1e293b; }
+    .vehicle-info .license { color: #64748b; font-size: 0.85rem; }
 
-    .vehicle-header {
-      display: flex;
-      align-items: center;
-      gap: 15px;
-      margin-bottom: 12px;
-    }
-
-    .vehicle-icon {
-      font-size: 2.5rem;
-    }
-
-    .vehicle-info h3 {
-      color: #1e293b;
-      font-size: 1.2rem;
-      margin-bottom: 3px;
-    }
-
-    .vehicle-info .license {
-      color: #64748b;
-      font-size: 0.85rem;
-    }
-
+    /* DROPZONE */
     .dropzone {
-      min-height: 80px;
-      background: white;
-      border: 3px dashed #cbd5e1;
-      border-radius: 12px;
-      padding: 10px;
-      margin: 12px 0;
-      transition: all 0.2s ease;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      align-items: center;
-      justify-content: center;
+      min-height: 80px; background: white; border: 3px dashed #cbd5e1;
+      border-radius: 12px; padding: 10px; margin: 12px 0;
+      display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: center;
+      transition: all 0.2s;
     }
+    .dropzone.drag-over { border-color: #667eea; background: #eff6ff; transform: scale(1.02); }
+    .dropzone:empty::before { content: "Trascina qui"; color: #94a3b8; font-style: italic; width: 100%; text-align: center; }
 
-    .dropzone.drag-over {
-      border-color: #667eea;
-      background: #eff6ff;
-      transform: scale(1.02);
-      box-shadow: inset 0 0 20px rgba(102, 126, 234, 0.1);
-    }
-
+    /* STILE PERSONA DENTRO DROPZONE (con tasto X) */
     .dropzone .person {
-      font-size: 0.85rem;
-      padding: 10px 15px;
-      margin: 0;
-      min-height: auto;
-      cursor: default;
+      font-size: 0.85rem; padding: 8px 12px; margin: 0; min-height: auto;
+      cursor: default; position: relative; padding-right: 25px; /* Spazio per la X */
+    }
+    
+    /* TASTO X DI RIMOZIONE */
+    .remove-btn {
+      position: absolute; top: -8px; right: -8px;
+      width: 22px; height: 22px; background: #ef4444; color: white;
+      border-radius: 50%; font-size: 16px; line-height: 20px;
+      text-align: center; cursor: pointer; font-weight: bold;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.3); border: 2px solid white;
     }
 
-    .dropzone:empty::before {
-      content: "Trascina qui";
-      display: block;
-      text-align: center;
-      color: #94a3b8;
-      font-style: italic;
-      width: 100%;
-    }
-
-    .timer-display {
-      text-align: center;
-      font-size: 1.8rem;
-      font-weight: 700;
-      color: #1e293b;
-      margin: 12px 0;
-      font-family: 'Courier New', monospace;
-      letter-spacing: 2px;
-    }
-
-    .timer-display.running {
-      color: #22c55e;
-    }
-
-    .controls {
-      display: flex;
-      gap: 8px;
-    }
-
-    .btn {
-      flex: 1;
-      padding: 12px;
-      border: none;
-      border-radius: 10px;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      text-transform: uppercase;
-      color: white;
-    }
-    .btn:active { transform: scale(0.95); }
-
+    /* CONTROLLI E TIMER */
+    .timer-display { text-align: center; font-size: 1.8rem; font-weight: 700; color: #1e293b; margin: 12px 0; font-family: monospace; }
+    .timer-display.running { color: #22c55e; }
+    .controls { display: flex; gap: 8px; }
+    .btn { flex: 1; padding: 12px; border: none; border-radius: 10px; font-weight: 600; color: white; text-transform: uppercase; }
     .btn-start { background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); }
     .btn-stop { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); }
-    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn:disabled { opacity: 0.5; }
 
-    /* Report Section */
-    .report-section { display: none; margin: 0 auto; max-width: 1400px; }
+    /* REPORT E TABELLE */
+    .report-section { display: none; }
     .report-section.active { display: block; }
-    .report-container { background: white; border-radius: 20px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
-
     .filters { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
-    .filters select, .filters button { padding: 10px; border: 2px solid #e2e8f0; border-radius: 8px; background: white; flex: 1; min-width: 120px; }
-    .filters button { background: #667eea; color: white; border: none; font-weight: bold; }
-    
-    .report-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
-    .report-table th { background: #f1f5f9; padding: 10px; text-align: left; }
-    .report-table td { padding: 10px; border-bottom: 1px solid #e2e8f0; }
+    .filters select, .filters button { padding: 10px; border-radius: 8px; border: 1px solid #ccc; flex: 1; }
+    .report-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; background: white; }
+    .report-table th, .report-table td { padding: 10px; border-bottom: 1px solid #eee; text-align: left; }
+    .report-table th { background: #f8fafc; }
 
-    @media (max-width: 768px) {
-      .header h1 { font-size: 1.3rem; }
-      .vehicle-icon { font-size: 2rem; }
-      .timer-display { font-size: 1.5rem; }
-      .report-table { display: block; overflow-x: auto; }
-    }
     .tab-content { display: none; }
     .tab-content.active { display: block; }
   </style>
 </head>
 <body>
+
   <div class="header">
-    <h1>🚗 Gestione Veicoli Aziendali</h1>
-    <p class="subtitle">Sistema di tracking e monitoraggio utilizzo</p>
+    <h1>🚗 Gestione Veicoli</h1>
   </div>
 
   <div class="nav-tabs">
@@ -301,298 +131,327 @@
       <div class="column">
         <h2>👥 Personale</h2>
         <div id="people-list">
-          <div class="person" draggable="true" data-name="Luca">Luca</div>
-          <div class="person" draggable="true" data-name="Filippo">Filippo</div>
-          <div class="person" draggable="true" data-name="Gabri">Gabri</div>
-          <div class="person" draggable="true" data-name="Damiano">Damiano</div>
-          <div class="person" draggable="true" data-name="Simone">Simone</div>
-          <div class="person" draggable="true" data-name="Nicola">Nicola</div>
+          <div class="person" data-name="Luca">Luca</div>
+          <div class="person" data-name="Filippo">Filippo</div>
+          <div class="person" data-name="Gabri">Gabri</div>
+          <div class="person" data-name="Damiano">Damiano</div>
+          <div class="person" data-name="Simone">Simone</div>
+          <div class="person" data-name="Nicola">Nicola</div>
         </div>
       </div>
 
       <div class="column">
-        <h2>🚙 Veicoli</h2>
-        
+        <h2>🚙 Parco Auto</h2>
         <div class="vehicle" data-vehicle="dacia">
           <div class="vehicle-header">
             <div class="vehicle-icon">🚐</div>
-            <div class="vehicle-info">
-              <h3>Dacia Dokker</h3>
-              <div class="license">AB 123 CD</div>
-            </div>
+            <div class="vehicle-info"><h3>Dacia Dokker</h3><div class="license">AB 123 CD</div></div>
           </div>
           <div class="dropzone"></div>
           <div class="timer-display">00:00:00</div>
-          <div class="controls">
-            <button class="btn btn-start">▶ Start</button>
-            <button class="btn btn-stop" disabled>■ Stop</button>
-          </div>
+          <div class="controls"><button class="btn btn-start">Start</button><button class="btn btn-stop" disabled>Stop</button></div>
         </div>
 
         <div class="vehicle" data-vehicle="fiat">
           <div class="vehicle-header">
             <div class="vehicle-icon">🚗</div>
-            <div class="vehicle-info">
-              <h3>Fiat 500L</h3>
-              <div class="license">EF 456 GH</div>
-            </div>
+            <div class="vehicle-info"><h3>Fiat 500L</h3><div class="license">EF 456 GH</div></div>
           </div>
           <div class="dropzone"></div>
           <div class="timer-display">00:00:00</div>
-          <div class="controls">
-            <button class="btn btn-start">▶ Start</button>
-            <button class="btn btn-stop" disabled>■ Stop</button>
-          </div>
+          <div class="controls"><button class="btn btn-start">Start</button><button class="btn btn-stop" disabled>Stop</button></div>
         </div>
 
         <div class="vehicle" data-vehicle="peugeot">
           <div class="vehicle-header">
             <div class="vehicle-icon">🚙</div>
-            <div class="vehicle-info">
-              <h3>Peugeot</h3>
-              <div class="license">IJ 789 KL</div>
-            </div>
+            <div class="vehicle-info"><h3>Peugeot</h3><div class="license">IJ 789 KL</div></div>
           </div>
           <div class="dropzone"></div>
           <div class="timer-display">00:00:00</div>
-          <div class="controls">
-            <button class="btn btn-start">▶ Start</button>
-            <button class="btn btn-stop" disabled>■ Stop</button>
-          </div>
+          <div class="controls"><button class="btn btn-start">Start</button><button class="btn btn-stop" disabled>Stop</button></div>
         </div>
       </div>
     </div>
   </div>
 
   <div id="report" class="tab-content report-section">
-    <div class="report-container">
-      <h2>📊 Report Utilizzo Veicoli</h2>
+    <div class="column">
+      <h2>📊 Report</h2>
       <div class="filters">
-        <select id="filter-vehicle"><option value="">Tutti i veicoli</option><option value="dacia">Dacia Dokker</option><option value="fiat">Fiat 500L</option><option value="peugeot">Peugeot</option></select>
-        <select id="filter-person"><option value="">Tutte le persone</option><option value="Luca">Luca</option><option value="Filippo">Filippo</option><option value="Gabri">Gabri</option><option value="Damiano">Damiano</option><option value="Simone">Simone</option><option value="Nicola">Nicola</option></select>
-        <button id="export-csv">📥 CSV</button>
-        <button id="clear-data" style="background:#ef4444;">🗑️ Reset</button>
+        <select id="filter-vehicle"><option value="">Tutti Veicoli</option><option value="dacia">Dacia</option><option value="fiat">Fiat</option><option value="peugeot">Peugeot</option></select>
+        <button id="export-csv" style="background:#667eea; color:white;">CSV</button>
+        <button id="clear-data" style="background:#ef4444; color:white;">Reset</button>
       </div>
-      <table class="report-table">
-        <thead><tr><th>Veicolo</th><th>Persone</th><th>Inizio</th><th>Fine</th><th>Durata</th></tr></thead>
-        <tbody id="report-body"></tbody>
-      </table>
-      <div id="empty-state" class="empty-state" style="display:none;"><p>Nessun dato.</p></div>
+      <div style="overflow-x:auto;">
+        <table class="report-table">
+          <thead><tr><th>Veicolo</th><th>Chi</th><th>Inizio</th><th>Fine</th><th>Durata</th></tr></thead>
+          <tbody id="report-body"></tbody>
+        </table>
+      </div>
     </div>
   </div>
 
-  <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => navigator.serviceWorker.register('service-worker.js').catch(() => {}));
-    }
+<script>
+// --- SERVICE WORKER ---
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('service-worker.js').catch(()=>{});
 
-    const timers = {};
-    const DB_KEY = 'vehicle-usage-data';
+// --- VARIABILI GLOBALI ---
+const timers = {};
+const DB_KEY = 'vehicle-usage-data';
 
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-        btn.classList.add('active');
-        document.getElementById(btn.dataset.tab).classList.add('active');
-        if (btn.dataset.tab === 'report') loadReport();
-      });
-    });
+// --- NAVIGAZIONE TAB ---
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(btn.dataset.tab).classList.add('active');
+    if(btn.dataset.tab === 'report') loadReport();
+  });
+});
 
-    // ===== DRAG & DROP UNIFICATO CON AUTO-SCROLL =====
+// ==========================================
+//   CORE DRAG & DROP + AUTO-SCROLL FIX
+// ==========================================
+
+let ghost = null;
+let dragSource = null; // L'elemento originale che stiamo trascinando
+let isDragging = false;
+
+// Variabili per l'Auto-Scroll
+let autoScrollSpeed = 0;
+let autoScrollAnimation = null;
+let currentTouchY = 0;
+
+// --- FUNZIONE LOOP SCROLL ---
+// Questa funzione gira sempre quando stai trascinando.
+// Se autoScrollSpeed è diverso da 0, scrolla la pagina.
+function performAutoScroll() {
+  if (isDragging && autoScrollSpeed !== 0) {
+    window.scrollBy(0, autoScrollSpeed);
+  }
+  if (isDragging) {
+    requestAnimationFrame(performAutoScroll);
+  }
+}
+
+// 1. TOUCH START
+document.addEventListener('touchstart', (e) => {
+  const target = e.target.closest('.person');
+  // Inizia solo se tocchi una persona nella lista sorgente (non nella dropzone)
+  if (target && target.parentElement.id === 'people-list') {
+    isDragging = true;
+    dragSource = target;
+    currentTouchY = e.touches[0].clientY;
     
-    let ghostElement = null;
-    let originalDragTarget = null;
-    let isDraggingMobile = false;
+    // Avvia il loop di controllo scroll
+    autoScrollSpeed = 0;
+    requestAnimationFrame(performAutoScroll);
+  }
+}, { passive: false });
 
-    // --- DESKTOP ---
-    document.addEventListener('dragstart', (e) => {
-      if (e.target.classList.contains('person') && e.target.parentElement.id === 'people-list') {
-        e.dataTransfer.setData('text/plain', e.target.dataset.name);
-        e.target.style.opacity = '0.5';
-      }
-    });
+// 2. TOUCH MOVE
+document.addEventListener('touchmove', (e) => {
+  if (!isDragging || !dragSource) return;
+  e.preventDefault(); // IMPORTANTE: Blocca lo scroll nativo per gestire il drag manualmente
 
-    document.addEventListener('dragend', (e) => {
-      if (e.target.classList.contains('person')) e.target.style.opacity = '1';
-    });
+  const touch = e.touches[0];
+  currentTouchY = touch.clientY;
+  
+  // --- CALCOLO ZONA DI SCROLL ---
+  const screenH = window.innerHeight;
+  const edgeSize = 100; // Pixel dal bordo per attivare lo scroll
+  const maxSpeed = 15;
 
-    const setupDropzones = () => {
-      document.querySelectorAll('.dropzone').forEach(zone => {
-        zone.addEventListener('dragover', (e) => { e.preventDefault(); zone.classList.add('drag-over'); });
-        zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
-        zone.addEventListener('drop', (e) => {
-          e.preventDefault();
-          zone.classList.remove('drag-over');
-          handleDropLogic(e.dataTransfer.getData('text/plain'), zone);
-        });
-      });
+  if (currentTouchY > screenH - edgeSize) {
+    // Vicino al fondo -> scendi
+    // Più vai giù, più veloce scrolla
+    const intensity = (currentTouchY - (screenH - edgeSize)) / edgeSize;
+    autoScrollSpeed = maxSpeed * intensity; 
+  } else if (currentTouchY < edgeSize) {
+    // Vicino alla cima -> sali
+    const intensity = (edgeSize - currentTouchY) / edgeSize;
+    autoScrollSpeed = -maxSpeed * intensity;
+  } else {
+    // Nel mezzo -> fermo
+    autoScrollSpeed = 0;
+  }
+
+  // --- GESTIONE FANTASMA ---
+  if (!ghost) {
+    ghost = document.createElement('div');
+    ghost.className = 'drag-ghost';
+    ghost.textContent = dragSource.textContent;
+    document.body.appendChild(ghost);
+    dragSource.classList.add('dragging-placeholder');
+  }
+
+  ghost.style.left = (touch.clientX - 70) + 'px';
+  ghost.style.top = (touch.clientY - 30) + 'px';
+
+  // --- HIGHLIGHT DROPZONE ---
+  const elBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+  const dropzone = elBelow ? elBelow.closest('.dropzone') : null;
+  document.querySelectorAll('.dropzone').forEach(z => z.classList.remove('drag-over'));
+  if (dropzone) dropzone.classList.add('drag-over');
+
+}, { passive: false });
+
+// 3. TOUCH END
+document.addEventListener('touchend', (e) => {
+  if (!isDragging) return;
+  
+  const touch = e.changedTouches[0];
+  const elBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+  const dropzone = elBelow ? elBelow.closest('.dropzone') : null;
+
+  if (dropzone && dragSource) {
+    dropPersonIntoZone(dragSource.dataset.name, dropzone);
+  }
+
+  // CLEANUP
+  if (ghost) { ghost.remove(); ghost = null; }
+  if (dragSource) {
+    dragSource.classList.remove('dragging-placeholder');
+    dragSource = null;
+  }
+  document.querySelectorAll('.dropzone').forEach(z => z.classList.remove('drag-over'));
+  isDragging = false;
+  autoScrollSpeed = 0; // Ferma lo scroll loop
+});
+
+// --- LOGICA DI ASSEGNAZIONE (COMUNE TOUCH & MOUSE) ---
+function dropPersonIntoZone(name, zone) {
+  // Controlla duplicati
+  let exists = false;
+  document.querySelectorAll('.dropzone .person').forEach(p => { if(p.dataset.name === name) exists = true; });
+  if(exists) return alert('⚠️ Persona già assegnata!');
+
+  // Trova originale
+  const original = document.querySelector(`#people-list .person[data-name="${name}"]`);
+  if(original) {
+    // Crea clone nella dropzone
+    const clone = document.createElement('div');
+    clone.className = 'person';
+    clone.dataset.name = name;
+    clone.textContent = name;
+    
+    // AGGIUNTA TASTO X
+    const removeBtn = document.createElement('span');
+    removeBtn.className = 'remove-btn';
+    removeBtn.innerHTML = '&times;';
+    removeBtn.onclick = (e) => {
+      e.stopPropagation(); // Evita click strani
+      removePersonFromVehicle(name, clone);
     };
-    setupDropzones();
+    clone.appendChild(removeBtn);
 
-    // --- MOBILE CON AUTO-SCROLL ---
-    document.addEventListener('touchstart', (e) => {
-      const target = e.target.closest('.person');
-      if (target && target.parentElement.id === 'people-list') {
-        originalDragTarget = target;
-        isDraggingMobile = true;
-      }
-    }, { passive: false });
+    zone.appendChild(clone);
+    original.style.display = 'none'; // Nascondi dalla lista
+  }
+}
 
-    document.addEventListener('touchmove', (e) => {
-      if (!isDraggingMobile || !originalDragTarget) return;
+// Funzione per rimuovere persona (clic sulla X)
+function removePersonFromVehicle(name, cloneElement) {
+  cloneElement.remove();
+  const original = document.querySelector(`#people-list .person[data-name="${name}"]`);
+  if(original) original.style.display = 'flex';
+}
 
-      const touch = e.touches[0];
-      e.preventDefault(); // Blocca scroll nativo del browser
+// ==========================================
+//   LOGICA TIMER & DB
+// ==========================================
+function formatTime(s) {
+  return [Math.floor(s/3600), Math.floor((s%3600)/60), s%60].map(v => String(v).padStart(2,'0')).join(':');
+}
 
-      // --- LOGICA AUTO-SCROLL ---
-      // Se il dito è vicino ai bordi, scorriamo la pagina
-      const edgeThreshold = 80; // pixel dal bordo
-      const scrollSpeed = 15;   // pixel per frame
+function updateTimerDisplay(vid) {
+  const el = document.querySelector(`.vehicle[data-vehicle="${vid}"] .timer-display`);
+  if(timers[vid]) el.textContent = formatTime(Math.floor((Date.now() - timers[vid].start)/1000));
+}
 
-      if (touch.clientY > window.innerHeight - edgeThreshold) {
-        // Vicino al fondo: Scendi
-        window.scrollBy(0, scrollSpeed);
-      } else if (touch.clientY < edgeThreshold) {
-        // Vicino alla cima: Sali
-        window.scrollBy(0, -scrollSpeed);
-      }
-      // --------------------------
+document.querySelectorAll('.vehicle').forEach(v => {
+  const vid = v.dataset.vehicle;
+  const btnStart = v.querySelector('.btn-start');
+  const btnStop = v.querySelector('.btn-stop');
+  const zone = v.querySelector('.dropzone');
+  const display = v.querySelector('.timer-display');
 
-      // Creazione Fantasma
-      if (!ghostElement) {
-        ghostElement = document.createElement('div');
-        ghostElement.classList.add('drag-ghost');
-        ghostElement.textContent = originalDragTarget.textContent;
-        document.body.appendChild(ghostElement);
-        originalDragTarget.classList.add('dragging-placeholder');
-      }
+  btnStart.addEventListener('click', () => {
+    const people = Array.from(zone.querySelectorAll('.person')).map(p => p.dataset.name);
+    if(!people.length) return alert('Inserisci qualcuno!');
+    
+    timers[vid] = { start: Date.now(), people, interval: setInterval(()=>updateTimerDisplay(vid), 1000) };
+    btnStart.disabled = true; btnStop.disabled = false;
+    display.classList.add('running');
+  });
 
-      // Muovi fantasma
-      ghostElement.style.left = `${touch.clientX - 70}px`;
-      ghostElement.style.top = `${touch.clientY - 30}px`;
+  btnStop.addEventListener('click', () => {
+    clearInterval(timers[vid].interval);
+    const end = Date.now();
+    const dur = Math.floor((end - timers[vid].start)/1000);
+    
+    const rec = {
+      vehicle: vid, 
+      vName: v.querySelector('h3').textContent,
+      people: timers[vid].people,
+      start: timers[vid].start,
+      end: end,
+      dur: dur
+    };
+    
+    const db = JSON.parse(localStorage.getItem(DB_KEY)||'[]');
+    db.push(rec);
+    localStorage.setItem(DB_KEY, JSON.stringify(db));
 
-      // Highlight Dropzone
-      const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
-      const dropzone = elementBelow ? elementBelow.closest('.dropzone') : null;
-
-      document.querySelectorAll('.dropzone').forEach(z => z.classList.remove('drag-over'));
-      if (dropzone) dropzone.classList.add('drag-over');
-
-    }, { passive: false });
-
-    document.addEventListener('touchend', (e) => {
-      if (!isDraggingMobile) return;
-
-      const touch = e.changedTouches[0];
-      const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
-      const dropzone = elementBelow ? elementBelow.closest('.dropzone') : null;
-
-      if (dropzone && originalDragTarget) {
-        handleDropLogic(originalDragTarget.dataset.name, dropzone);
-      }
-
-      if (ghostElement) { ghostElement.remove(); ghostElement = null; }
-      if (originalDragTarget) {
-        originalDragTarget.classList.remove('dragging-placeholder');
-        originalDragTarget = null;
-      }
-      document.querySelectorAll('.dropzone').forEach(z => z.classList.remove('drag-over'));
-      isDraggingMobile = false;
+    // Reset UI
+    zone.innerHTML = ''; // Rimuovi tutti dal veicolo
+    timers[vid].people.forEach(name => {
+      const orig = document.querySelector(`#people-list .person[data-name="${name}"]`);
+      if(orig) orig.style.display = 'flex';
     });
 
-    function handleDropLogic(personName, zone) {
-      if (!personName) return;
-      let alreadyAssigned = false;
-      document.querySelectorAll('.dropzone .person').forEach(p => { if (p.dataset.name === personName) alreadyAssigned = true; });
+    delete timers[vid];
+    btnStart.disabled = false; btnStop.disabled = true;
+    display.classList.remove('running');
+    display.textContent = '00:00:00';
+    alert('✅ Viaggio Salvato');
+  });
+});
 
-      if (alreadyAssigned) return alert(`⚠️ ${personName} è già su un veicolo!`);
+// REPORT
+function loadReport() {
+  const db = JSON.parse(localStorage.getItem(DB_KEY)||'[]');
+  const vFilter = document.getElementById('filter-vehicle').value;
+  const tbody = document.getElementById('report-body');
+  
+  const filtered = db.filter(r => !vFilter || r.vehicle === vFilter);
+  
+  tbody.innerHTML = filtered.map(r => `
+    <tr>
+      <td><b>${r.vName}</b></td>
+      <td>${r.people.join(', ')}</td>
+      <td>${new Date(r.start).toLocaleTimeString()}</td>
+      <td>${new Date(r.end).toLocaleTimeString()}</td>
+      <td>${formatTime(r.dur)}</td>
+    </tr>
+  `).join('');
+}
 
-      const originalPerson = Array.from(document.querySelectorAll('#people-list .person')).find(p => p.dataset.name === personName);
-      if (originalPerson) {
-        const clone = originalPerson.cloneNode(true);
-        clone.draggable = false;
-        clone.classList.remove('dragging-placeholder');
-        zone.appendChild(clone);
-        originalPerson.style.display = 'none';
-      }
-    }
+document.getElementById('filter-vehicle').addEventListener('change', loadReport);
+document.getElementById('clear-data').addEventListener('click', ()=>{ 
+  if(confirm('Cancello tutto?')) { localStorage.removeItem(DB_KEY); loadReport(); }
+});
+document.getElementById('export-csv').addEventListener('click', ()=>{
+  const db = JSON.parse(localStorage.getItem(DB_KEY)||'[]');
+  if(!db.length) return alert('No Data');
+  let csv = "Veicolo,Chi,Inizio,Fine,Durata\n" + db.map(r => 
+    `"${r.vName}","${r.people.join(';')}",${new Date(r.start).toLocaleString()},${new Date(r.end).toLocaleString()},${formatTime(r.dur)}`
+  ).join('\n');
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv'})); a.download = 'report.csv'; a.click();
+});
 
-    // ===== TIMER & APP LOGIC =====
-    function formatTime(s) {
-      return [Math.floor(s/3600), Math.floor((s%3600)/60), s%60].map(v => v.toString().padStart(2,'0')).join(':');
-    }
-
-    function updateTimer(vId) {
-      const el = document.querySelector(`.vehicle[data-vehicle="${vId}"] .timer-display`);
-      if(timers[vId]) el.textContent = formatTime(Math.floor((Date.now() - timers[vId].start)/1000));
-    }
-
-    document.querySelectorAll('.vehicle').forEach(v => {
-      const vId = v.dataset.vehicle;
-      const startBtn = v.querySelector('.btn-start');
-      const stopBtn = v.querySelector('.btn-stop');
-      const zone = v.querySelector('.dropzone');
-      const timerDisplay = v.querySelector('.timer-display');
-
-      startBtn.addEventListener('click', () => {
-        const people = Array.from(zone.querySelectorAll('.person')).map(p => p.dataset.name);
-        if(!people.length) return alert('⚠️ Aggiungi persone!');
-        timers[vId] = { start: Date.now(), people, interval: setInterval(()=>updateTimer(vId), 1000) };
-        startBtn.disabled = true; stopBtn.disabled = false;
-        timerDisplay.classList.add('running');
-      });
-
-      stopBtn.addEventListener('click', () => {
-        clearInterval(timers[vId].interval);
-        const end = Date.now();
-        const duration = Math.floor((end - timers[vId].start)/1000);
-        
-        const record = {
-          vehicleName: v.querySelector('h3').textContent,
-          vehicle: vId,
-          people: timers[vId].people,
-          startTime: timers[vId].start,
-          endTime: end,
-          duration
-        };
-        const data = JSON.parse(localStorage.getItem(DB_KEY)||'[]');
-        data.push(record);
-        localStorage.setItem(DB_KEY, JSON.stringify(data));
-
-        zone.querySelectorAll('.person').forEach(p => {
-          const orig = document.querySelector(`#people-list .person[data-name="${p.dataset.name}"]`);
-          if(orig) orig.style.display = 'flex';
-          p.remove();
-        });
-        
-        delete timers[vId];
-        startBtn.disabled = false; stopBtn.disabled = true;
-        timerDisplay.classList.remove('running');
-        timerDisplay.textContent = '00:00:00';
-        alert('✅ Viaggio registrato!');
-      });
-    });
-
-    function loadReport() {
-      const data = JSON.parse(localStorage.getItem(DB_KEY)||'[]');
-      const vFilter = document.getElementById('filter-vehicle').value;
-      const pFilter = document.getElementById('filter-person').value;
-      const filtered = data.filter(r => (!vFilter || r.vehicle === vFilter) && (!pFilter || r.people.includes(pFilter)));
-      const tbody = document.getElementById('report-body');
-      tbody.innerHTML = filtered.map(r => `<tr><td><strong>${r.vehicleName}</strong></td><td>${r.people.join(', ')}</td><td>${new Date(r.startTime).toLocaleString('it-IT')}</td><td>${new Date(r.endTime).toLocaleString('it-IT').split(',')[1]}</td><td><strong>${formatTime(r.duration)}</strong></td></tr>`).join('');
-      document.getElementById('empty-state').style.display = filtered.length ? 'none' : 'block';
-    }
-
-    document.getElementById('filter-vehicle').addEventListener('change', loadReport);
-    document.getElementById('filter-person').addEventListener('change', loadReport);
-    document.getElementById('clear-data').addEventListener('click', () => { if(confirm('Cancellare tutto?')) { localStorage.removeItem(DB_KEY); loadReport(); } });
-    document.getElementById('export-csv').addEventListener('click', () => {
-      const data = JSON.parse(localStorage.getItem(DB_KEY)||'[]');
-      if(!data.length) return alert('No data');
-      let csv = "Veicolo,Persone,Inizio,Fine,Durata\n" + data.map(r => `"${r.vehicleName}","${r.people.join(';')}",${new Date(r.startTime).toLocaleString()},${new Date(r.endTime).toLocaleString()},${formatTime(r.duration)}`).join('\n');
-      const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'})); a.download = 'report.csv'; a.click();
-    });
-  </script>
+</script>
 </body>
 </html>
