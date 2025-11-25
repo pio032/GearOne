@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="theme-color" content="#1e40af">
   <meta name="description" content="Gestione veicoli aziendali con tracking tempo">
   <link rel="manifest" href="manifest.json">
@@ -13,6 +13,8 @@
       margin: 0;
       padding: 0;
       box-sizing: border-box;
+      /* Previene il refresh su pull-down che da fastidio al drag su mobile */
+      overscroll-behavior-y: contain; 
     }
 
     body {
@@ -21,7 +23,6 @@
       min-height: 100vh;
       padding: 10px;
       overflow-x: hidden;
-      -webkit-overflow-scrolling: touch;
     }
 
     .header {
@@ -48,9 +49,10 @@
       margin-bottom: 15px;
       position: sticky;
       top: 0;
-      z-index: 100;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      z-index: 90;
+      background: rgba(102, 126, 234, 0.95); /* Leggera trasparenza per l'header sticky */
       padding: 10px 0;
+      backdrop-filter: blur(5px);
     }
 
     .nav-tabs button {
@@ -63,12 +65,6 @@
       font-size: 14px;
       font-weight: 600;
       transition: all 0.3s ease;
-      backdrop-filter: blur(10px);
-      touch-action: manipulation;
-    }
-
-    .nav-tabs button:active {
-      transform: scale(0.95);
     }
 
     .nav-tabs button.active {
@@ -99,16 +95,11 @@
       display: flex;
       align-items: center;
       gap: 10px;
-      position: sticky;
-      top: 60px;
-      background: white;
-      padding: 10px 0;
-      z-index: 10;
     }
 
     #people-list {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
       gap: 10px;
     }
 
@@ -118,23 +109,16 @@
       color: white;
       border-radius: 12px;
       cursor: grab;
-      transition: all 0.3s ease;
       font-weight: 600;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 8px;
-      touch-action: none;
       user-select: none;
-      -webkit-user-select: none;
-      min-height: 60px;
-      text-align: center;
-    }
-
-    .person:active {
-      cursor: grabbing;
-      opacity: 0.7;
-      transform: scale(1.05);
+      -webkit-user-select: none; /* Importante per iOS */
+      touch-action: none; /* Disabilita azioni browser default su questi elementi */
+      min-height: 50px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
 
     .person::before {
@@ -142,14 +126,35 @@
       font-size: 1.2rem;
     }
 
-    #people-list .person {
+    /* Stile per l'elemento fantasma durante il trascinamento mobile */
+    .drag-ghost {
+      position: fixed;
+      pointer-events: none; /* Fondamentale: permette di "vedere" cosa c'è sotto il dito */
+      z-index: 1000;
+      opacity: 0.9;
+      box-shadow: 0 15px 30px rgba(0,0,0,0.4);
+      transform: scale(1.1) rotate(-2deg);
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border-radius: 12px;
+      padding: 15px;
+      font-weight: 600;
       display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 140px; /* Larghezza fissa per coerenza */
     }
+    .drag-ghost::before { content: "👤"; font-size: 1.2rem; }
 
-    .person.dragging {
+    /* Stile placeholder quando l'elemento viene trascinato via */
+    .person.dragging-placeholder {
       opacity: 0.3;
-      transform: scale(0.95);
+      background: #e2e8f0;
+      border: 2px dashed #cbd5e1;
+      color: transparent;
     }
+    .person.dragging-placeholder::before { content: ""; }
 
     .vehicle {
       background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
@@ -157,7 +162,6 @@
       margin-bottom: 15px;
       border-radius: 16px;
       border: 2px solid #e2e8f0;
-      transition: all 0.3s ease;
     }
 
     .vehicle-header {
@@ -189,7 +193,7 @@
       border-radius: 12px;
       padding: 10px;
       margin: 12px 0;
-      transition: all 0.3s ease;
+      transition: all 0.2s ease;
       display: flex;
       flex-wrap: wrap;
       gap: 8px;
@@ -199,8 +203,9 @@
 
     .dropzone.drag-over {
       border-color: #667eea;
-      background: #f1f5fe;
+      background: #eff6ff;
       transform: scale(1.02);
+      box-shadow: inset 0 0 20px rgba(102, 126, 234, 0.1);
     }
 
     .dropzone .person {
@@ -208,7 +213,7 @@
       padding: 10px 15px;
       margin: 0;
       min-height: auto;
-      flex: 0 0 auto;
+      cursor: default; /* Una volta nel veicolo non si trascina più */
     }
 
     .dropzone:empty::before {
@@ -249,181 +254,36 @@
       cursor: pointer;
       transition: all 0.3s ease;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
-      touch-action: manipulation;
-    }
-
-    .btn:active {
-      transform: scale(0.95);
-    }
-
-    .btn-start {
-      background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
       color: white;
     }
+    .btn:active { transform: scale(0.95); }
 
-    .btn-stop {
-      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-      color: white;
-    }
-
-    .btn:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
+    .btn-start { background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); }
+    .btn-stop { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
     /* Report Section */
-    .report-section {
-      display: none;
-      max-width: 1400px;
-      margin: 0 auto;
-    }
+    .report-section { display: none; margin: 0 auto; max-width: 1400px; }
+    .report-section.active { display: block; }
+    .report-container { background: white; border-radius: 20px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
 
-    .report-section.active {
-      display: block;
-    }
+    .filters { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+    .filters select, .filters button { padding: 10px; border: 2px solid #e2e8f0; border-radius: 8px; background: white; flex: 1; min-width: 120px; }
+    .filters button { background: #667eea; color: white; border: none; font-weight: bold; }
+    
+    .report-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    .report-table th { background: #f1f5f9; padding: 10px; text-align: left; }
+    .report-table td { padding: 10px; border-bottom: 1px solid #e2e8f0; }
 
-    .report-container {
-      background: white;
-      border-radius: 20px;
-      padding: 30px;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-    }
-
-    .filters {
-      display: flex;
-      gap: 15px;
-      margin-bottom: 25px;
-      flex-wrap: wrap;
-    }
-
-    .filters select, .filters button {
-      padding: 12px 20px;
-      border: 2px solid #e2e8f0;
-      border-radius: 10px;
-      font-size: 16px;
-      background: white;
-      cursor: pointer;
-      transition: all 0.3s ease;
-    }
-
-    .filters select:focus {
-      outline: none;
-      border-color: #667eea;
-    }
-
-    .filters button {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      border: none;
-      font-weight: 600;
-    }
-
-    .filters button:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-    }
-
-    .report-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 20px;
-    }
-
-    .report-table th {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      padding: 15px;
-      text-align: left;
-      font-weight: 600;
-    }
-
-    .report-table td {
-      padding: 15px;
-      border-bottom: 1px solid #e2e8f0;
-    }
-
-    .report-table tr:hover {
-      background: #f8fafc;
-    }
-
-    .empty-state {
-      text-align: center;
-      padding: 60px 20px;
-      color: #94a3b8;
-    }
-
-    .empty-state::before {
-      content: "📋";
-      font-size: 4rem;
-      display: block;
-      margin-bottom: 20px;
-    }
-
-    /* Responsive */
+    /* Responsive adjustments */
     @media (max-width: 768px) {
-      body {
-        padding: 5px;
-      }
-
-      .header h1 {
-        font-size: 1.3rem;
-      }
-
-      .header .subtitle {
-        font-size: 0.85rem;
-      }
-
-      .nav-tabs {
-        gap: 8px;
-        padding: 8px 0;
-      }
-
-      .nav-tabs button {
-        padding: 8px 16px;
-        font-size: 13px;
-      }
-
-      .column {
-        padding: 15px;
-      }
-
-      .column h2 {
-        font-size: 1.2rem;
-        top: 50px;
-      }
-
-      #people-list {
-        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-      }
-
-      .person {
-        padding: 12px;
-        font-size: 0.9rem;
-      }
-
-      .vehicle-icon {
-        font-size: 2rem;
-      }
-
-      .timer-display {
-        font-size: 1.5rem;
-      }
-
-      .btn {
-        font-size: 13px;
-        padding: 10px;
-      }
+      .header h1 { font-size: 1.3rem; }
+      .vehicle-icon { font-size: 2rem; }
+      .timer-display { font-size: 1.5rem; }
+      .report-table { display: block; overflow-x: auto; }
     }
-
-    /* Tab content */
-    .tab-content {
-      display: none;
-    }
-
-    .tab-content.active {
-      display: block;
-    }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
   </style>
 </head>
 <body>
@@ -437,7 +297,6 @@
     <button class="tab-btn" data-tab="report">Report</button>
   </div>
 
-  <!-- Dashboard Tab -->
   <div id="dashboard" class="tab-content active">
     <div class="container">
       <div class="column">
@@ -506,414 +365,286 @@
     </div>
   </div>
 
-  <!-- Report Tab -->
   <div id="report" class="tab-content report-section">
     <div class="report-container">
       <h2>📊 Report Utilizzo Veicoli</h2>
-      
       <div class="filters">
-        <select id="filter-vehicle">
-          <option value="">Tutti i veicoli</option>
-          <option value="dacia">Dacia Dokker</option>
-          <option value="fiat">Fiat 500L</option>
-          <option value="peugeot">Peugeot</option>
-        </select>
-        
-        <select id="filter-person">
-          <option value="">Tutte le persone</option>
-          <option value="Luca">Luca</option>
-          <option value="Filippo">Filippo</option>
-          <option value="Gabri">Gabri</option>
-          <option value="Damiano">Damiano</option>
-          <option value="Simone">Simone</option>
-          <option value="Nicola">Nicola</option>
-        </select>
-        
-        <button id="export-csv">📥 Esporta CSV</button>
-        <button id="clear-data" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);">🗑️ Cancella Dati</button>
+        <select id="filter-vehicle"><option value="">Tutti i veicoli</option><option value="dacia">Dacia Dokker</option><option value="fiat">Fiat 500L</option><option value="peugeot">Peugeot</option></select>
+        <select id="filter-person"><option value="">Tutte le persone</option><option value="Luca">Luca</option><option value="Filippo">Filippo</option><option value="Gabri">Gabri</option><option value="Damiano">Damiano</option><option value="Simone">Simone</option><option value="Nicola">Nicola</option></select>
+        <button id="export-csv">📥 CSV</button>
+        <button id="clear-data" style="background:#ef4444;">🗑️ Reset</button>
       </div>
-
       <table class="report-table">
-        <thead>
-          <tr>
-            <th>Veicolo</th>
-            <th>Persone</th>
-            <th>Data/Ora Inizio</th>
-            <th>Data/Ora Fine</th>
-            <th>Durata</th>
-          </tr>
-        </thead>
-        <tbody id="report-body">
-        </tbody>
+        <thead><tr><th>Veicolo</th><th>Persone</th><th>Inizio</th><th>Fine</th><th>Durata</th></tr></thead>
+        <tbody id="report-body"></tbody>
       </table>
-      
-      <div id="empty-state" class="empty-state" style="display: none;">
-        <p>Nessun utilizzo registrato</p>
-      </div>
+      <div id="empty-state" class="empty-state" style="display:none;"><p>Nessun dato.</p></div>
     </div>
   </div>
 
   <script>
-    // ===== SERVICE WORKER REGISTRATION =====
+    // ===== SERVICE WORKER =====
     if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('service-worker.js')
-          .then(reg => console.log('✅ Service Worker registrato'))
-          .catch(err => console.log('❌ Errore Service Worker:', err));
-      });
+      window.addEventListener('load', () => navigator.serviceWorker.register('service-worker.js').catch(() => {}));
     }
 
-    // ===== STATE MANAGEMENT =====
-    let draggedElement = null;
+    // ===== STATE & INIT =====
     const timers = {};
     const DB_KEY = 'vehicle-usage-data';
 
-    // ===== TAB NAVIGATION =====
+    // ===== TABS =====
     document.querySelectorAll('.tab-btn').forEach(btn => {
       btn.addEventListener('click', () => {
-        const tabName = btn.dataset.tab;
-        
-        // Update buttons
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        
-        // Update content
         document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-        document.getElementById(tabName).classList.add('active');
-        
-        if (tabName === 'report') {
-          loadReport();
-        }
+        btn.classList.add('active');
+        document.getElementById(btn.dataset.tab).classList.add('active');
+        if (btn.dataset.tab === 'report') loadReport();
       });
     });
 
-    // ===== DRAG & DROP (Desktop & Mobile) =====
-    let touchStartY = 0;
-    let isTouchDragging = false;
+    // ===== LOGICA DRAG & DROP UNIFICATA (DESKTOP + MOBILE) =====
     
-    // Desktop drag events
+    // Variabili per il Drag Mobile
+    let ghostElement = null;
+    let originalDragTarget = null;
+    let isDraggingMobile = false;
+
+    // --- DESKTOP (HTML5 Drag native API) ---
     document.addEventListener('dragstart', (e) => {
       if (e.target.classList.contains('person') && e.target.parentElement.id === 'people-list') {
-        draggedElement = e.target;
-        e.target.classList.add('dragging');
+        e.dataTransfer.setData('text/plain', e.target.dataset.name);
+        e.target.style.opacity = '0.5';
       }
     });
 
     document.addEventListener('dragend', (e) => {
-      if (e.target.classList.contains('person')) {
-        e.target.classList.remove('dragging');
-      }
+      if (e.target.classList.contains('person')) e.target.style.opacity = '1';
     });
 
-    document.addEventListener('dragover', (e) => {
-      if (e.target.classList.contains('dropzone')) {
-        e.preventDefault();
-        e.target.classList.add('drag-over');
-      }
-    });
-
-    document.addEventListener('dragleave', (e) => {
-      if (e.target.classList.contains('dropzone')) {
-        e.target.classList.remove('drag-over');
-      }
-    });
-
-    document.addEventListener('drop', (e) => {
-      if (e.target.classList.contains('dropzone')) {
-        e.preventDefault();
-        e.target.classList.remove('drag-over');
-        
-        if (!draggedElement) return;
-        
-        const personName = draggedElement.dataset.name;
-        
-        // Controlla se la persona è già assegnata ad un altro veicolo
-        const allDropzones = document.querySelectorAll('.dropzone');
-        let alreadyAssigned = false;
-        
-        allDropzones.forEach(zone => {
-          const people = zone.querySelectorAll('.person');
-          people.forEach(person => {
-            if (person.dataset.name === personName) {
-              alreadyAssigned = true;
-            }
-          });
+    // Drag Over/Leave per Dropzone
+    const setupDropzones = () => {
+      document.querySelectorAll('.dropzone').forEach(zone => {
+        zone.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          zone.classList.add('drag-over');
         });
-        
-        if (alreadyAssigned) {
-          alert(`⚠️ ${personName} è già assegnato ad un altro veicolo`);
-          draggedElement = null;
-          return;
-        }
-        
-        const clone = draggedElement.cloneNode(true);
-        clone.draggable = false;
-        e.target.appendChild(clone);
-        
-        // Nascondi la persona dalla lista originale
-        draggedElement.style.display = 'none';
-        draggedElement = null;
-      }
-    });
+        zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+        zone.addEventListener('drop', (e) => {
+          e.preventDefault();
+          zone.classList.remove('drag-over');
+          const name = e.dataTransfer.getData('text/plain');
+          handleDropLogic(name, zone);
+        });
+      });
+    };
+    setupDropzones();
 
-    // ===== TOUCH EVENTS for Mobile =====
+    // --- MOBILE (TOUCH API Custom) ---
+    // Usiamo 'touchstart', 'touchmove', 'touchend' per simulare il drag con effetto fantasma
+
     document.addEventListener('touchstart', (e) => {
       const target = e.target.closest('.person');
+      // Attiva solo se tocchi una persona nella lista principale
       if (target && target.parentElement.id === 'people-list') {
-        draggedElement = target;
-        touchStartY = window.scrollY;
-        isTouchDragging = false;
-        target.classList.add('dragging');
+        // Preveniamo lo scroll se iniziamo a trascinare, ma con cautela
+        // Inizializziamo il drag
+        originalDragTarget = target;
+        isDraggingMobile = true;
       }
-    }, { passive: true });
+    }, { passive: false });
 
     document.addEventListener('touchmove', (e) => {
-      if (draggedElement) {
-        // Permetti lo scroll se il movimento è prevalentemente verticale
-        const touch = e.touches[0];
-        const scrollDiff = Math.abs(window.scrollY - touchStartY);
-        if (scrollDiff > 10) {
-          isTouchDragging = false;
-          return;
-        }
+      if (!isDraggingMobile || !originalDragTarget) return;
+
+      const touch = e.touches[0];
+      e.preventDefault(); // Blocca lo scroll della pagina mentre trascini!
+
+      // Creazione Fantasma (se non esiste)
+      if (!ghostElement) {
+        ghostElement = document.createElement('div');
+        ghostElement.classList.add('drag-ghost');
+        ghostElement.textContent = originalDragTarget.textContent;
+        document.body.appendChild(ghostElement);
         
-        isTouchDragging = true;
-        
-        // Trova elemento sotto il tocco
-        const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
-        const dropzone = elementBelow?.closest('.dropzone');
-        
-        // Rimuovi highlight da tutte le dropzone
-        document.querySelectorAll('.dropzone').forEach(z => z.classList.remove('drag-over'));
-        
-        if (dropzone) {
-          dropzone.classList.add('drag-over');
-        }
+        // Nascondiamo visivamente l'originale (placeholder)
+        originalDragTarget.classList.add('dragging-placeholder');
       }
-    }, { passive: true });
+
+      // Muovi il fantasma sotto il dito
+      ghostElement.style.left = `${touch.clientX - 70}px`; // Centra orizzontalmente (metà width)
+      ghostElement.style.top = `${touch.clientY - 30}px`;  // Centra verticalmente
+
+      // Identifica Dropzone sotto il dito
+      // Nascondiamo il fantasma un attimo per vedere cosa c'è sotto, oppure usiamo pointer-events: none nel CSS
+      const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+      const dropzone = elementBelow ? elementBelow.closest('.dropzone') : null;
+
+      // Gestione feedback visivo dropzone
+      document.querySelectorAll('.dropzone').forEach(z => z.classList.remove('drag-over'));
+      if (dropzone) {
+        dropzone.classList.add('drag-over');
+      }
+    }, { passive: false });
 
     document.addEventListener('touchend', (e) => {
-      if (draggedElement && isTouchDragging) {
-        const touch = e.changedTouches[0];
-        const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
-        const dropzone = elementBelow?.closest('.dropzone');
-        
-        if (dropzone) {
-          const personName = draggedElement.dataset.name;
-          
-          // Controlla se la persona è già assegnata
-          const allDropzones = document.querySelectorAll('.dropzone');
-          let alreadyAssigned = false;
-          
-          allDropzones.forEach(zone => {
-            const people = zone.querySelectorAll('.person');
-            people.forEach(person => {
-              if (person.dataset.name === personName) {
-                alreadyAssigned = true;
-              }
-            });
-          });
-          
-          if (alreadyAssigned) {
-            alert(`⚠️ ${personName} è già assegnato ad un altro veicolo`);
-          } else {
-            const clone = draggedElement.cloneNode(true);
-            clone.draggable = false;
-            dropzone.appendChild(clone);
-            draggedElement.style.display = 'none';
-          }
-        }
-        
-        draggedElement.classList.remove('dragging');
-        document.querySelectorAll('.dropzone').forEach(z => z.classList.remove('drag-over'));
-      }
-      
-      if (draggedElement) {
-        draggedElement.classList.remove('dragging');
-      }
-      draggedElement = null;
-      isTouchDragging = false;
-    }, { passive: true });
+      if (!isDraggingMobile) return;
 
-    // ===== TIMER FUNCTIONS =====
-    function formatTime(seconds) {
-      const h = Math.floor(seconds / 3600).toString().padStart(2, '0');
-      const m = Math.floor((seconds % 3600) / 60).toString().padStart(2, '0');
-      const s = (seconds % 60).toString().padStart(2, '0');
-      return `${h}:${m}:${s}`;
+      // Recuperiamo la dropzone finale
+      const touch = e.changedTouches[0];
+      const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+      const dropzone = elementBelow ? elementBelow.closest('.dropzone') : null;
+
+      if (dropzone && originalDragTarget) {
+        handleDropLogic(originalDragTarget.dataset.name, dropzone);
+      }
+
+      // Clean up
+      if (ghostElement) {
+        ghostElement.remove();
+        ghostElement = null;
+      }
+      if (originalDragTarget) {
+        originalDragTarget.classList.remove('dragging-placeholder');
+        originalDragTarget = null;
+      }
+      document.querySelectorAll('.dropzone').forEach(z => z.classList.remove('drag-over'));
+      isDraggingMobile = false;
+    });
+
+
+    // ===== LOGICA CONDIVISA DI DROP =====
+    function handleDropLogic(personName, zone) {
+      if (!personName) return;
+
+      // 1. Controlla duplicati in tutte le dropzone
+      let alreadyAssigned = false;
+      document.querySelectorAll('.dropzone .person').forEach(p => {
+        if (p.dataset.name === personName) alreadyAssigned = true;
+      });
+
+      if (alreadyAssigned) {
+        alert(`⚠️ ${personName} è già su un veicolo!`);
+        return;
+      }
+
+      // 2. Trova l'elemento originale nella lista
+      const originalPerson = Array.from(document.querySelectorAll('#people-list .person'))
+                                  .find(p => p.dataset.name === personName);
+
+      if (originalPerson) {
+        // 3. Clona e aggiungi alla dropzone
+        const clone = originalPerson.cloneNode(true);
+        clone.draggable = false; // Non si sposta più una volta assegnato
+        clone.style.opacity = '1';
+        clone.classList.remove('dragging-placeholder');
+        zone.appendChild(clone);
+
+        // 4. Nascondi originale
+        originalPerson.style.display = 'none';
+      }
     }
 
-    function updateTimerDisplay(vehicleId) {
-      const vehicle = document.querySelector(`[data-vehicle="${vehicleId}"]`);
-      const display = vehicle.querySelector('.timer-display');
-      const elapsed = Math.floor((Date.now() - timers[vehicleId].startTime) / 1000);
-      display.textContent = formatTime(elapsed);
+
+    // ===== TIMER & LOGICA VEICOLI =====
+    function formatTime(s) {
+      return [Math.floor(s/3600), Math.floor((s%3600)/60), s%60]
+        .map(v => v.toString().padStart(2,'0')).join(':');
     }
 
-    // ===== VEHICLE CONTROLS =====
-    document.querySelectorAll('.vehicle').forEach(vehicle => {
-      const vehicleId = vehicle.dataset.vehicle;
-      const startBtn = vehicle.querySelector('.btn-start');
-      const stopBtn = vehicle.querySelector('.btn-stop');
-      const dropzone = vehicle.querySelector('.dropzone');
-      const timerDisplay = vehicle.querySelector('.timer-display');
+    function updateTimer(vId) {
+      const el = document.querySelector(`.vehicle[data-vehicle="${vId}"] .timer-display`);
+      if(timers[vId]) el.textContent = formatTime(Math.floor((Date.now() - timers[vId].start)/1000));
+    }
+
+    document.querySelectorAll('.vehicle').forEach(v => {
+      const vId = v.dataset.vehicle;
+      const startBtn = v.querySelector('.btn-start');
+      const stopBtn = v.querySelector('.btn-stop');
+      const zone = v.querySelector('.dropzone');
+      const timerDisplay = v.querySelector('.timer-display');
 
       startBtn.addEventListener('click', () => {
-        const people = Array.from(dropzone.querySelectorAll('.person'))
-          .map(p => p.dataset.name || p.textContent.trim());
-
-        if (people.length === 0) {
-          alert('⚠️ Trascina almeno una persona sul veicolo prima di avviare il timer');
-          return;
-        }
-
-        timers[vehicleId] = {
-          startTime: Date.now(),
-          people: people,
-          interval: setInterval(() => updateTimerDisplay(vehicleId), 1000)
-        };
-
-        startBtn.disabled = true;
-        stopBtn.disabled = false;
+        const people = Array.from(zone.querySelectorAll('.person')).map(p => p.dataset.name);
+        if(!people.length) return alert('⚠️ Aggiungi persone!');
+        
+        timers[vId] = { start: Date.now(), people, interval: setInterval(()=>updateTimer(vId), 1000) };
+        startBtn.disabled = true; stopBtn.disabled = false;
         timerDisplay.classList.add('running');
       });
 
       stopBtn.addEventListener('click', () => {
-        if (!timers[vehicleId]) return;
-
-        clearInterval(timers[vehicleId].interval);
+        clearInterval(timers[vId].interval);
+        const end = Date.now();
+        const duration = Math.floor((end - timers[vId].start)/1000);
         
-        const endTime = Date.now();
-        const duration = Math.floor((endTime - timers[vehicleId].startTime) / 1000);
-
-        // Save to localStorage
+        // Salvataggio
         const record = {
-          vehicle: vehicleId,
-          vehicleName: vehicle.querySelector('h3').textContent,
-          people: timers[vehicleId].people,
-          startTime: timers[vehicleId].startTime,
-          endTime: endTime,
-          duration: duration
+          vehicleName: v.querySelector('h3').textContent,
+          vehicle: vId,
+          people: timers[vId].people,
+          startTime: timers[vId].start,
+          endTime: end,
+          duration
         };
-
-        saveRecord(record);
-
-        // Ripristina le persone nella lista originale
-        const assignedPeople = Array.from(dropzone.querySelectorAll('.person'));
-        assignedPeople.forEach(person => {
-          const personName = person.dataset.name;
-          const originalPerson = document.querySelector(`#people-list .person[data-name="${personName}"]`);
-          if (originalPerson) {
-            originalPerson.style.display = 'flex';
-          }
-        });
+        const data = JSON.parse(localStorage.getItem(DB_KEY)||'[]');
+        data.push(record);
+        localStorage.setItem(DB_KEY, JSON.stringify(data));
 
         // Reset UI
-        startBtn.disabled = false;
-        stopBtn.disabled = true;
+        zone.querySelectorAll('.person').forEach(p => {
+          const orig = document.querySelector(`#people-list .person[data-name="${p.dataset.name}"]`);
+          if(orig) orig.style.display = 'flex';
+          p.remove();
+        });
+        
+        delete timers[vId];
+        startBtn.disabled = false; stopBtn.disabled = true;
         timerDisplay.classList.remove('running');
         timerDisplay.textContent = '00:00:00';
-        dropzone.innerHTML = '';
-        
-        delete timers[vehicleId];
-
-        alert('✅ Utilizzo registrato con successo!');
+        alert('✅ Viaggio registrato!');
       });
     });
 
-    // ===== DATA PERSISTENCE =====
-    function saveRecord(record) {
-      const data = JSON.parse(localStorage.getItem(DB_KEY) || '[]');
-      data.push(record);
-      localStorage.setItem(DB_KEY, JSON.stringify(data));
-    }
-
-    function loadRecords() {
-      return JSON.parse(localStorage.getItem(DB_KEY) || '[]');
-    }
-
-    function clearRecords() {
-      if (confirm('⚠️ Sei sicuro di voler cancellare tutti i dati?')) {
-        localStorage.removeItem(DB_KEY);
-        loadReport();
-        alert('✅ Dati cancellati');
-      }
-    }
-
-    // ===== REPORT FUNCTIONS =====
+    // ===== REPORT =====
     function loadReport() {
-      const records = loadRecords();
-      const vehicleFilter = document.getElementById('filter-vehicle').value;
-      const personFilter = document.getElementById('filter-person').value;
-
-      let filtered = records;
-
-      if (vehicleFilter) {
-        filtered = filtered.filter(r => r.vehicle === vehicleFilter);
-      }
-
-      if (personFilter) {
-        filtered = filtered.filter(r => r.people.includes(personFilter));
-      }
+      const data = JSON.parse(localStorage.getItem(DB_KEY)||'[]');
+      const vFilter = document.getElementById('filter-vehicle').value;
+      const pFilter = document.getElementById('filter-person').value;
+      
+      const filtered = data.filter(r => 
+        (!vFilter || r.vehicle === vFilter) && 
+        (!pFilter || r.people.includes(pFilter))
+      );
 
       const tbody = document.getElementById('report-body');
-      const emptyState = document.getElementById('empty-state');
-
-      if (filtered.length === 0) {
-        tbody.innerHTML = '';
-        emptyState.style.display = 'block';
-        return;
-      }
-
-      emptyState.style.display = 'none';
-      tbody.innerHTML = filtered.map(record => `
-        <tr>
-          <td><strong>${record.vehicleName}</strong></td>
-          <td>${record.people.join(', ')}</td>
-          <td>${new Date(record.startTime).toLocaleString('it-IT')}</td>
-          <td>${new Date(record.endTime).toLocaleString('it-IT')}</td>
-          <td><strong>${formatTime(record.duration)}</strong></td>
-        </tr>
+      tbody.innerHTML = filtered.map(r => `
+        <tr><td><strong>${r.vehicleName}</strong></td><td>${r.people.join(', ')}</td>
+        <td>${new Date(r.startTime).toLocaleString('it-IT')}</td>
+        <td>${new Date(r.endTime).toLocaleString('it-IT').split(',')[1]}</td>
+        <td><strong>${formatTime(r.duration)}</strong></td></tr>
       `).join('');
-    }
-
-    // ===== CSV EXPORT =====
-    function exportCSV() {
-      const records = loadRecords();
       
-      if (records.length === 0) {
-        alert('⚠️ Nessun dato da esportare');
-        return;
-      }
-
-      const headers = ['Veicolo', 'Persone', 'Data/Ora Inizio', 'Data/Ora Fine', 'Durata'];
-      const rows = records.map(r => [
-        r.vehicleName,
-        r.people.join('; '),
-        new Date(r.startTime).toLocaleString('it-IT'),
-        new Date(r.endTime).toLocaleString('it-IT'),
-        formatTime(r.duration)
-      ]);
-
-      const csv = [headers, ...rows]
-        .map(row => row.map(cell => `"${cell}"`).join(','))
-        .join('\n');
-
-      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(blob);
-      link.download = `report-veicoli-${new Date().toISOString().split('T')[0]}.csv`;
-      link.click();
+      document.getElementById('empty-state').style.display = filtered.length ? 'none' : 'block';
     }
 
-    // ===== EVENT LISTENERS =====
     document.getElementById('filter-vehicle').addEventListener('change', loadReport);
     document.getElementById('filter-person').addEventListener('change', loadReport);
-    document.getElementById('export-csv').addEventListener('click', exportCSV);
-    document.getElementById('clear-data').addEventListener('click', clearRecords);
+    document.getElementById('clear-data').addEventListener('click', () => {
+      if(confirm('Cancellare tutto?')) { localStorage.removeItem(DB_KEY); loadReport(); }
+    });
+    document.getElementById('export-csv').addEventListener('click', () => {
+      const data = JSON.parse(localStorage.getItem(DB_KEY)||'[]');
+      if(!data.length) return alert('No data');
+      let csv = "Veicolo,Persone,Inizio,Fine,Durata\n" + data.map(r => 
+        `"${r.vehicleName}","${r.people.join(';')}",${new Date(r.startTime).toLocaleString()},${new Date(r.endTime).toLocaleString()},${formatTime(r.duration)}`
+      ).join('\n');
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'}));
+      a.download = 'report.csv';
+      a.click();
+    });
 
-    // ===== INIT =====
-    loadReport();
   </script>
 </body>
 </html>
