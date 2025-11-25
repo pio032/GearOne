@@ -1,8 +1,3 @@
-<!--
-Copyright (c) 2025 GearOne
-Tutti i diritti riservati. Questo software è proprietario e non può essere copiato,
-modificato, distribuito o utilizzato senza esplicita autorizzazione scritta del titolare.
--->
 <!DOCTYPE html>
 <html lang="it">
 <head>
@@ -12,136 +7,296 @@ modificato, distribuito o utilizzato senza esplicita autorizzazione scritta del 
   <meta name="description" content="Gestione veicoli aziendali con tracking tempo">
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icon-192.png">
-  <title>GearOne</title>
+  <title>Gestione Veicoli Aziendali</title>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       min-height: 100vh;
-      padding: 20px;
+      padding: 10px;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
     }
-    .header { text-align: center; color: white; margin-bottom: 30px; }
-    .header h1 { font-size: 2rem; font-weight: 700; margin-bottom: 10px; }
-    .header .subtitle { opacity: 0.9; font-size: 1rem; }
-    .nav-tabs { display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; }
+
+    .header {
+      text-align: center;
+      color: white;
+      margin-bottom: 20px;
+    }
+
+    .header h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 5px;
+    }
+
+    .header .subtitle {
+      opacity: 0.9;
+      font-size: 0.9rem;
+    }
+
+    .nav-tabs {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-bottom: 15px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 10px 0;
+    }
+
     .nav-tabs button {
-      padding: 12px 24px;
-      background: rgba(255,255,255,0.2);
-      border: 2px solid rgba(255,255,255,0.3);
+      padding: 10px 20px;
+      background: rgba(255, 255, 255, 0.2);
+      border: 2px solid rgba(255, 255, 255, 0.3);
       color: white;
       border-radius: 10px;
       cursor: pointer;
-      font-size: 16px;
+      font-size: 14px;
       font-weight: 600;
       transition: all 0.3s ease;
       backdrop-filter: blur(10px);
+      touch-action: manipulation;
     }
-    .nav-tabs button:hover { background: rgba(255,255,255,0.3); transform: translateY(-2px); }
-    .nav-tabs button.active { background: white; color: #667eea; }
-    .container { display: flex; gap: 20px; max-width: 1400px; margin: 0 auto; }
+
+    .nav-tabs button:active {
+      transform: scale(0.95);
+    }
+
+    .nav-tabs button.active {
+      background: white;
+      color: #667eea;
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      max-width: 1400px;
+      margin: 0 auto;
+      padding-bottom: 20px;
+    }
+
     .column {
-      flex: 1;
       background: white;
       border-radius: 20px;
-      padding: 25px;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      padding: 20px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
     }
+
     .column h2 {
       color: #1e293b;
-      margin-bottom: 20px;
-      font-size: 1.5rem;
+      margin-bottom: 15px;
+      font-size: 1.3rem;
       display: flex;
       align-items: center;
       gap: 10px;
+      position: sticky;
+      top: 60px;
+      background: white;
+      padding: 10px 0;
+      z-index: 10;
     }
+
+    #people-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 10px;
+    }
+
     .person {
       padding: 15px;
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: white;
       border-radius: 12px;
-      margin-bottom: 10px;
       cursor: grab;
       transition: all 0.3s ease;
       font-weight: 600;
       display: flex;
       align-items: center;
-      gap: 10px;
+      justify-content: center;
+      gap: 8px;
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+      min-height: 60px;
+      text-align: center;
     }
-    .person:hover { transform: translateX(5px); box-shadow: 0 5px 15px rgba(102,126,234,0.4); }
-    .person:active { cursor: grabbing; }
-    .person::before { content: "👤"; font-size: 1.2rem; }
-    #people-list .person { display: flex; }
+
+    .person:active {
+      cursor: grabbing;
+      opacity: 0.7;
+      transform: scale(1.05);
+    }
+
+    .person::before {
+      content: "👤";
+      font-size: 1.2rem;
+    }
+
+    #people-list .person {
+      display: flex;
+    }
+
+    .person.dragging {
+      opacity: 0.3;
+      transform: scale(0.95);
+    }
+
     .vehicle {
       background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-      padding: 20px;
-      margin-bottom: 20px;
+      padding: 15px;
+      margin-bottom: 15px;
       border-radius: 16px;
       border: 2px solid #e2e8f0;
       transition: all 0.3s ease;
     }
-    .vehicle:hover { border-color: #667eea; box-shadow: 0 8px 20px rgba(102,126,234,0.2); }
-    .vehicle-header { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; }
-    .vehicle-icon { font-size: 3rem; }
-    .vehicle-info h3 { color: #1e293b; font-size: 1.3rem; margin-bottom: 5px; }
-    .vehicle-info .license { color: #64748b; font-size: 0.9rem; }
+
+    .vehicle-header {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      margin-bottom: 12px;
+    }
+
+    .vehicle-icon {
+      font-size: 2.5rem;
+    }
+
+    .vehicle-info h3 {
+      color: #1e293b;
+      font-size: 1.2rem;
+      margin-bottom: 3px;
+    }
+
+    .vehicle-info .license {
+      color: #64748b;
+      font-size: 0.85rem;
+    }
+
     .dropzone {
       min-height: 80px;
       background: white;
       border: 3px dashed #cbd5e1;
       border-radius: 12px;
-      padding: 15px;
-      margin: 15px 0;
+      padding: 10px;
+      margin: 12px 0;
       transition: all 0.3s ease;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      justify-content: center;
     }
-    .dropzone.drag-over { border-color: #667eea; background: #f1f5fe; transform: scale(1.02); }
-    .dropzone .person { font-size: 0.9rem; padding: 10px; }
+
+    .dropzone.drag-over {
+      border-color: #667eea;
+      background: #f1f5fe;
+      transform: scale(1.02);
+    }
+
+    .dropzone .person {
+      font-size: 0.85rem;
+      padding: 10px 15px;
+      margin: 0;
+      min-height: auto;
+      flex: 0 0 auto;
+    }
+
     .dropzone:empty::before {
-      content: "Trascina persone qui";
+      content: "Trascina qui";
       display: block;
       text-align: center;
       color: #94a3b8;
       font-style: italic;
-      line-height: 50px;
+      width: 100%;
     }
+
     .timer-display {
       text-align: center;
-      font-size: 2rem;
+      font-size: 1.8rem;
       font-weight: 700;
       color: #1e293b;
-      margin: 15px 0;
+      margin: 12px 0;
       font-family: 'Courier New', monospace;
       letter-spacing: 2px;
     }
-    .timer-display.running { color: #22c55e; }
-    .controls { display: flex; gap: 10px; }
+
+    .timer-display.running {
+      color: #22c55e;
+    }
+
+    .controls {
+      display: flex;
+      gap: 8px;
+    }
+
     .btn {
       flex: 1;
-      padding: 14px;
+      padding: 12px;
       border: none;
       border-radius: 10px;
-      font-size: 16px;
+      font-size: 14px;
       font-weight: 600;
       cursor: pointer;
       transition: all 0.3s ease;
       text-transform: uppercase;
-      letter-spacing: 1px;
+      letter-spacing: 0.5px;
+      touch-action: manipulation;
     }
+
+    .btn:active {
+      transform: scale(0.95);
+    }
+
     .btn-start {
       background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
       color: white;
     }
-    .btn-start:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(34,197,94,0.4); }
+
     .btn-stop {
       background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
       color: white;
     }
-    .btn-stop:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(239,68,68,0.4); }
-    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-    .report-section { display: none; max-width: 1400px; margin: 0 auto; }
-    .report-section.active { display: block; }
-    .report-container { background: white; border-radius: 20px; padding: 30px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
-    .filters { display: flex; gap: 15px; margin-bottom: 25px; flex-wrap: wrap; }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* Report Section */
+    .report-section {
+      display: none;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .report-section.active {
+      display: block;
+    }
+
+    .report-container {
+      background: white;
+      border-radius: 20px;
+      padding: 30px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+
+    .filters {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 25px;
+      flex-wrap: wrap;
+    }
+
     .filters select, .filters button {
       padding: 12px 20px;
       border: 2px solid #e2e8f0;
@@ -151,15 +306,30 @@ modificato, distribuito o utilizzato senza esplicita autorizzazione scritta del 
       cursor: pointer;
       transition: all 0.3s ease;
     }
-    .filters select:focus { outline: none; border-color: #667eea; }
+
+    .filters select:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
     .filters button {
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: white;
       border: none;
       font-weight: 600;
     }
-    .filters button:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(102,126,234,0.4); }
-    .report-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+
+    .filters button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    .report-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
     .report-table th {
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: white;
@@ -167,24 +337,98 @@ modificato, distribuito o utilizzato senza esplicita autorizzazione scritta del 
       text-align: left;
       font-weight: 600;
     }
-    .report-table td { padding: 15px; border-bottom: 1px solid #e2e8f0; }
-    .report-table tr:hover { background: #f8fafc; }
-    .empty-state { text-align: center; padding: 60px 20px; color: #94a3b8; }
-    .empty-state::before { content: "📋"; font-size: 4rem; display: block; margin-bottom: 20px; }
-    @media (max-width: 768px) {
-      .container { flex-direction: column; }
-      .header h1 { font-size: 1.5rem; }
-      .nav-tabs { flex-direction: column; }
-      .nav-tabs button { width: 100%; }
-      .timer-display { font-size: 1.5rem; }
+
+    .report-table td {
+      padding: 15px;
+      border-bottom: 1px solid #e2e8f0;
     }
-    .tab-content { display: none; }
-    .tab-content.active { display: block; }
+
+    .report-table tr:hover {
+      background: #f8fafc;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #94a3b8;
+    }
+
+    .empty-state::before {
+      content: "📋";
+      font-size: 4rem;
+      display: block;
+      margin-bottom: 20px;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      body {
+        padding: 5px;
+      }
+
+      .header h1 {
+        font-size: 1.3rem;
+      }
+
+      .header .subtitle {
+        font-size: 0.85rem;
+      }
+
+      .nav-tabs {
+        gap: 8px;
+        padding: 8px 0;
+      }
+
+      .nav-tabs button {
+        padding: 8px 16px;
+        font-size: 13px;
+      }
+
+      .column {
+        padding: 15px;
+      }
+
+      .column h2 {
+        font-size: 1.2rem;
+        top: 50px;
+      }
+
+      #people-list {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      }
+
+      .person {
+        padding: 12px;
+        font-size: 0.9rem;
+      }
+
+      .vehicle-icon {
+        font-size: 2rem;
+      }
+
+      .timer-display {
+        font-size: 1.5rem;
+      }
+
+      .btn {
+        font-size: 13px;
+        padding: 10px;
+      }
+    }
+
+    /* Tab content */
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
   </style>
 </head>
 <body>
   <div class="header">
-    <h1>🚗 GearOne</h1>
+    <h1>🚗 Gestione Veicoli Aziendali</h1>
     <p class="subtitle">Sistema di tracking e monitoraggio utilizzo</p>
   </div>
 
@@ -193,6 +437,7 @@ modificato, distribuito o utilizzato senza esplicita autorizzazione scritta del 
     <button class="tab-btn" data-tab="report">Report</button>
   </div>
 
+  <!-- Dashboard Tab -->
   <div id="dashboard" class="tab-content active">
     <div class="container">
       <div class="column">
@@ -261,9 +506,11 @@ modificato, distribuito o utilizzato senza esplicita autorizzazione scritta del 
     </div>
   </div>
 
+  <!-- Report Tab -->
   <div id="report" class="tab-content report-section">
     <div class="report-container">
       <h2>📊 Report Utilizzo Veicoli</h2>
+      
       <div class="filters">
         <select id="filter-vehicle">
           <option value="">Tutti i veicoli</option>
@@ -271,6 +518,7 @@ modificato, distribuito o utilizzato senza esplicita autorizzazione scritta del 
           <option value="fiat">Fiat 500L</option>
           <option value="peugeot">Peugeot</option>
         </select>
+        
         <select id="filter-person">
           <option value="">Tutte le persone</option>
           <option value="Luca">Luca</option>
@@ -280,6 +528,7 @@ modificato, distribuito o utilizzato senza esplicita autorizzazione scritta del 
           <option value="Simone">Simone</option>
           <option value="Nicola">Nicola</option>
         </select>
+        
         <button id="export-csv">📥 Esporta CSV</button>
         <button id="clear-data" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);">🗑️ Cancella Dati</button>
       </div>
@@ -305,6 +554,7 @@ modificato, distribuito o utilizzato senza esplicita autorizzazione scritta del 
   </div>
 
   <script>
+    // ===== SERVICE WORKER REGISTRATION =====
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('service-worker.js')
@@ -313,33 +563,45 @@ modificato, distribuito o utilizzato senza esplicita autorizzazione scritta del 
       });
     }
 
+    // ===== STATE MANAGEMENT =====
     let draggedElement = null;
     const timers = {};
     const DB_KEY = 'vehicle-usage-data';
 
+    // ===== TAB NAVIGATION =====
     document.querySelectorAll('.tab-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const tabName = btn.dataset.tab;
+        
+        // Update buttons
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
+        
+        // Update content
         document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
         document.getElementById(tabName).classList.add('active');
+        
         if (tabName === 'report') {
           loadReport();
         }
       });
     });
 
+    // ===== DRAG & DROP (Desktop & Mobile) =====
+    let touchStartY = 0;
+    let isTouchDragging = false;
+    
+    // Desktop drag events
     document.addEventListener('dragstart', (e) => {
-      if (e.target.classList.contains('person')) {
+      if (e.target.classList.contains('person') && e.target.parentElement.id === 'people-list') {
         draggedElement = e.target;
-        e.target.style.opacity = '0.5';
+        e.target.classList.add('dragging');
       }
     });
 
     document.addEventListener('dragend', (e) => {
       if (e.target.classList.contains('person')) {
-        e.target.style.opacity = '1';
+        e.target.classList.remove('dragging');
       }
     });
 
@@ -360,9 +622,15 @@ modificato, distribuito o utilizzato senza esplicita autorizzazione scritta del 
       if (e.target.classList.contains('dropzone')) {
         e.preventDefault();
         e.target.classList.remove('drag-over');
+        
+        if (!draggedElement) return;
+        
         const personName = draggedElement.dataset.name;
+        
+        // Controlla se la persona è già assegnata ad un altro veicolo
         const allDropzones = document.querySelectorAll('.dropzone');
         let alreadyAssigned = false;
+        
         allDropzones.forEach(zone => {
           const people = zone.querySelectorAll('.person');
           people.forEach(person => {
@@ -371,19 +639,103 @@ modificato, distribuito o utilizzato senza esplicita autorizzazione scritta del 
             }
           });
         });
+        
         if (alreadyAssigned) {
           alert(`⚠️ ${personName} è già assegnato ad un altro veicolo`);
           draggedElement = null;
           return;
         }
+        
         const clone = draggedElement.cloneNode(true);
         clone.draggable = false;
         e.target.appendChild(clone);
+        
+        // Nascondi la persona dalla lista originale
         draggedElement.style.display = 'none';
         draggedElement = null;
       }
     });
 
+    // ===== TOUCH EVENTS for Mobile =====
+    document.addEventListener('touchstart', (e) => {
+      const target = e.target.closest('.person');
+      if (target && target.parentElement.id === 'people-list') {
+        draggedElement = target;
+        touchStartY = window.scrollY;
+        isTouchDragging = false;
+        target.classList.add('dragging');
+      }
+    }, { passive: true });
+
+    document.addEventListener('touchmove', (e) => {
+      if (draggedElement) {
+        // Permetti lo scroll se il movimento è prevalentemente verticale
+        const touch = e.touches[0];
+        const scrollDiff = Math.abs(window.scrollY - touchStartY);
+        if (scrollDiff > 10) {
+          isTouchDragging = false;
+          return;
+        }
+        
+        isTouchDragging = true;
+        
+        // Trova elemento sotto il tocco
+        const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+        const dropzone = elementBelow?.closest('.dropzone');
+        
+        // Rimuovi highlight da tutte le dropzone
+        document.querySelectorAll('.dropzone').forEach(z => z.classList.remove('drag-over'));
+        
+        if (dropzone) {
+          dropzone.classList.add('drag-over');
+        }
+      }
+    }, { passive: true });
+
+    document.addEventListener('touchend', (e) => {
+      if (draggedElement && isTouchDragging) {
+        const touch = e.changedTouches[0];
+        const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+        const dropzone = elementBelow?.closest('.dropzone');
+        
+        if (dropzone) {
+          const personName = draggedElement.dataset.name;
+          
+          // Controlla se la persona è già assegnata
+          const allDropzones = document.querySelectorAll('.dropzone');
+          let alreadyAssigned = false;
+          
+          allDropzones.forEach(zone => {
+            const people = zone.querySelectorAll('.person');
+            people.forEach(person => {
+              if (person.dataset.name === personName) {
+                alreadyAssigned = true;
+              }
+            });
+          });
+          
+          if (alreadyAssigned) {
+            alert(`⚠️ ${personName} è già assegnato ad un altro veicolo`);
+          } else {
+            const clone = draggedElement.cloneNode(true);
+            clone.draggable = false;
+            dropzone.appendChild(clone);
+            draggedElement.style.display = 'none';
+          }
+        }
+        
+        draggedElement.classList.remove('dragging');
+        document.querySelectorAll('.dropzone').forEach(z => z.classList.remove('drag-over'));
+      }
+      
+      if (draggedElement) {
+        draggedElement.classList.remove('dragging');
+      }
+      draggedElement = null;
+      isTouchDragging = false;
+    }, { passive: true });
+
+    // ===== TIMER FUNCTIONS =====
     function formatTime(seconds) {
       const h = Math.floor(seconds / 3600).toString().padStart(2, '0');
       const m = Math.floor((seconds % 3600) / 60).toString().padStart(2, '0');
@@ -398,6 +750,7 @@ modificato, distribuito o utilizzato senza esplicita autorizzazione scritta del 
       display.textContent = formatTime(elapsed);
     }
 
+    // ===== VEHICLE CONTROLS =====
     document.querySelectorAll('.vehicle').forEach(vehicle => {
       const vehicleId = vehicle.dataset.vehicle;
       const startBtn = vehicle.querySelector('.btn-start');
@@ -429,9 +782,11 @@ modificato, distribuito o utilizzato senza esplicita autorizzazione scritta del 
         if (!timers[vehicleId]) return;
 
         clearInterval(timers[vehicleId].interval);
+        
         const endTime = Date.now();
         const duration = Math.floor((endTime - timers[vehicleId].startTime) / 1000);
 
+        // Save to localStorage
         const record = {
           vehicle: vehicleId,
           vehicleName: vehicle.querySelector('h3').textContent,
@@ -443,6 +798,7 @@ modificato, distribuito o utilizzato senza esplicita autorizzazione scritta del 
 
         saveRecord(record);
 
+        // Ripristina le persone nella lista originale
         const assignedPeople = Array.from(dropzone.querySelectorAll('.person'));
         assignedPeople.forEach(person => {
           const personName = person.dataset.name;
@@ -452,17 +808,20 @@ modificato, distribuito o utilizzato senza esplicita autorizzazione scritta del 
           }
         });
 
+        // Reset UI
         startBtn.disabled = false;
         stopBtn.disabled = true;
         timerDisplay.classList.remove('running');
         timerDisplay.textContent = '00:00:00';
         dropzone.innerHTML = '';
+        
         delete timers[vehicleId];
 
         alert('✅ Utilizzo registrato con successo!');
       });
     });
 
+    // ===== DATA PERSISTENCE =====
     function saveRecord(record) {
       const data = JSON.parse(localStorage.getItem(DB_KEY) || '[]');
       data.push(record);
@@ -481,24 +840,31 @@ modificato, distribuito o utilizzato senza esplicita autorizzazione scritta del 
       }
     }
 
+    // ===== REPORT FUNCTIONS =====
     function loadReport() {
       const records = loadRecords();
       const vehicleFilter = document.getElementById('filter-vehicle').value;
       const personFilter = document.getElementById('filter-person').value;
+
       let filtered = records;
+
       if (vehicleFilter) {
         filtered = filtered.filter(r => r.vehicle === vehicleFilter);
       }
+
       if (personFilter) {
         filtered = filtered.filter(r => r.people.includes(personFilter));
       }
+
       const tbody = document.getElementById('report-body');
       const emptyState = document.getElementById('empty-state');
+
       if (filtered.length === 0) {
         tbody.innerHTML = '';
         emptyState.style.display = 'block';
         return;
       }
+
       emptyState.style.display = 'none';
       tbody.innerHTML = filtered.map(record => `
         <tr>
@@ -511,12 +877,15 @@ modificato, distribuito o utilizzato senza esplicita autorizzazione scritta del 
       `).join('');
     }
 
+    // ===== CSV EXPORT =====
     function exportCSV() {
       const records = loadRecords();
+      
       if (records.length === 0) {
         alert('⚠️ Nessun dato da esportare');
         return;
       }
+
       const headers = ['Veicolo', 'Persone', 'Data/Ora Inizio', 'Data/Ora Fine', 'Durata'];
       const rows = records.map(r => [
         r.vehicleName,
@@ -525,9 +894,11 @@ modificato, distribuito o utilizzato senza esplicita autorizzazione scritta del 
         new Date(r.endTime).toLocaleString('it-IT'),
         formatTime(r.duration)
       ]);
+
       const csv = [headers, ...rows]
         .map(row => row.map(cell => `"${cell}"`).join(','))
         .join('\n');
+
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
       const link = document.createElement('a');
       link.href = URL.createObjectURL(blob);
@@ -535,11 +906,13 @@ modificato, distribuito o utilizzato senza esplicita autorizzazione scritta del 
       link.click();
     }
 
+    // ===== EVENT LISTENERS =====
     document.getElementById('filter-vehicle').addEventListener('change', loadReport);
     document.getElementById('filter-person').addEventListener('change', loadReport);
     document.getElementById('export-csv').addEventListener('click', exportCSV);
     document.getElementById('clear-data').addEventListener('click', clearRecords);
 
+    // ===== INIT =====
     loadReport();
   </script>
 </body>
